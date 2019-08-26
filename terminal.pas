@@ -75,7 +75,7 @@ Begin
                    If (tamArg1<>0) Then
                      Begin
                        Try
-                         arg1et(arq);
+                         reset(arq);
                          Repeat
                            Readln(arq, outputString);
                            Writeln(outputString);
