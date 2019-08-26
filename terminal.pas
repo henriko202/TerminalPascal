@@ -14,6 +14,7 @@ Var
   tam : integer;
   c : TSysCharSet;
   arq: TextFile;
+  Str: String;
 
 Begin
   // teve que ser feito pois extractword não aceita char
@@ -62,12 +63,53 @@ Begin
                    exit;
                  End;
         '' : write();
-        'clear' :
-                  Begin
-                    clrscr();
-                  End;
-        Else
-          writeln('Comando não reconhecido!');
+        'cat'  :
+                 Begin
+                   AssignFile(arq, res);
+                  {$I+}
+                   If (tam<>0) Then
+                     Begin
+                       Try
+                         Reset(arq);
+                         Repeat
+                           Readln(arq, Str);
+                           Writeln(Str);
+                         Until (EOF(arq));
+                         CloseFile(arq);
+                       Except
+                         on E: EInOutError Do writeln('Erro na leitura: '+E.
+                                                      ClassName
+                                                      +'/'+E.Message);
+                     End;
+                 End;
+        If (tam=0) Then
+          Begin
+            writeln('Digite um arquivo para ler!');
+          End;
       End;
+      'ls':
+            Begin
+              writeln('NYI!');
+            End;
+      'cd':
+            Begin
+              writeln('NYI!');
+            End;
+      'mv':
+            Begin
+              writeln('NYI!');
+            End;
+      'rmdir':
+               Begin
+                 writeln('NYI!');
+               End;
+      'mkdir':
+               Begin
+                 writeln('NYI!');
+               End;
+      'clear' : clrscr();
+      Else
+        writeln('Comando não reconhecido!');
     End;
+End;
 End.
