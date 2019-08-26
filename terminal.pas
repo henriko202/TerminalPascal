@@ -10,16 +10,21 @@ Type
 
 Var 
   entrada: String;
-  res : String;
-  tam : integer;
-  c : TSysCharSet;
+  arg0 : String;
+  arg1 : String;
+  arg2 : String;
+  tamArg0 : integer;
+  tamArg1 : integer;
+  tamArg2 : integer;
+  charset : TSysCharSet;
   arq: TextFile;
-  Str: String;
+  outputString: String;
+  currLocation : String;
 
 Begin
   // teve que ser feito pois extractword não aceita char
-  c := [];
-  include(c, ' ');
+  charset := [];
+  include(charset, ' ');
 
   entrada := '';
   While (CompareText(entrada,'exit')<>0) Do
@@ -27,32 +32,32 @@ Begin
       write('>');
       readLn(entrada);
 
-      res := ExtractWord(2 ,entrada,c);
-      tam := WordCount(res,c);
-      entrada := ExtractWord(1,entrada,c);
+      arg1 := ExtractWord(2 ,entrada,charset);
+      tamArg1 := WordCount(arg1,charset);
+      arg0 := ExtractWord(1,entrada,charset);
 
       // writeln('entrada: ' + entrada);
-      // writeln('res: ' + res);
-      // writeln('tam: ' + IntToStr(tam));
+      // writeln('arg1: ' + arg1);
+      // writeln('tamArg1: ' + IntToStr(tamArg1));
 
-      Case entrada Of 
+      Case arg0 Of 
         'man' :
-                //terminar manuais para o resto dos comandos
+                //terminar manuais para o arg1to dos comandos
                 Begin
-                  Case res Of 
+                  Case arg1 Of 
                     'man' : writeln('Mostra um manual sobre o comando fornecido'
                             );
                     // caso padrão, comando vazio ou inexistente
                     Else
                       Begin
-                        If (tam=0) Then
+                        If (tamArg1=0) Then
                           Begin
                             writeln('Qual manual gostaria de ver?');
                           End;
                         // if then else nao funciona (?????)
-                        If (tam<>0) Then
+                        If (tamArg1<>0) Then
                           Begin
-                            writeln('Comando ' + res + ' inexistente!');
+                            writeln('Comando ' + arg1 + ' inexistente!');
                           End;
                       End;
                   End;
@@ -65,15 +70,15 @@ Begin
         '' : write();
         'cat'  :
                  Begin
-                   AssignFile(arq, res);
+                   AssignFile(arq, arg1);
                   {$I+}
-                   If (tam<>0) Then
+                   If (tamArg1<>0) Then
                      Begin
                        Try
-                         Reset(arq);
+                         arg1et(arq);
                          Repeat
-                           Readln(arq, Str);
-                           Writeln(Str);
+                           Readln(arq, outputString);
+                           Writeln(outputString);
                          Until (EOF(arq));
                          CloseFile(arq);
                        Except
@@ -82,7 +87,7 @@ Begin
                                                       +'/'+E.Message);
                      End;
                  End;
-        If (tam=0) Then
+        If (tamArg1=0) Then
           Begin
             writeln('Digite um arquivo para ler!');
           End;
