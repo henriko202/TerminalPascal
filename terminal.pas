@@ -13,6 +13,7 @@ Var
   res : String;
   tam : integer;
   c : TSysCharSet;
+  arq: TextFile;
 
 Begin
   // teve que ser feito pois extractword não aceita char
