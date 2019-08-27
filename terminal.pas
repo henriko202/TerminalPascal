@@ -113,6 +113,10 @@ Begin
             Begin
               writeln('NYI!');
             End;
+      'locate':
+                Begin
+                  writeln('NYI!');
+                End;
       'rmdir':
                Begin
                  Try
