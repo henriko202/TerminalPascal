@@ -40,18 +40,68 @@ Begin
       tam1 := WordCount(arg1,charset);
       tam2 := WordCount(arg2,charset);
 
-
-      // writeln('entrada: ' + entrada);
-      // writeln('arg1: ' + arg1);
-      // writeln('tam1: ' + IntToStr(tam1));
-
       Case arg0 Of 
+        'help' :
+                 Begin
+                   writeln('Comandos existentes:');
+                   writeln('man, exit, cat, ls, cd, mv, touch, locate, rmdir, mkdir, rm, clear');
+                 End;
         'man' :
                 //terminar manuais para o arg1to dos comandos
                 Begin
                   Case arg1 Of 
-                    'man' : writeln('Mostra um manual sobre o comando fornecido'
-                            );
+                    'man' :
+                            Begin
+                              writeln('Mostra um manual sobre o comando fornecido');
+                            End;
+                    'exit' :
+                             Begin
+                               writeln('Fecha o terminal');
+                             End;
+                    'cat' :
+                            Begin
+                              writeln('Mostra o conteúdo de um arquivo passado por argumento');
+                            End;
+                    'ls' :
+                           Begin
+                             writeln('Mostra o conteúdo da pasta atual');
+                           End;
+                    'cd' :
+                           Begin
+                             writeln('Muda o diretório atual');
+                           End;
+                    'mv' :
+                           Begin
+                             writeln('Move ou renomeia um arquivo');
+                           End;
+                    'touch' :
+                              Begin
+                                writeln('Cria um arquivo');
+                              End;
+                    'locate' :
+                               Begin
+                                 writeln('Procura um arquivo na pasta atual');
+                               End;
+                    'rmdir' :
+                              Begin
+                                writeln('Remove um diretório da pasta autal');
+                              End;
+                    'mkdir' :
+                              Begin
+                                writeln('Cria um diretório na pasta atual');
+                              End;
+                    'rm' :
+                           Begin
+                             writeln('Remove um arquivo da pasta atual');
+                           End;
+                    'clear' :
+                              Begin
+                                writeln('Limpa a tela do terminal');
+                              End;
+                    'help' :
+                             Begin
+                               writeln('Mostra os comandos existentes');
+                             End;
                     // caso padrão, comando vazio ou inexistente
                     Else
                       Begin
@@ -111,11 +161,16 @@ Begin
             End;
       'cd':
             Begin
-              Try
-                ChDir (arg1);
-              Except
-                on E: EInOutError Do Writeln (E.Message);
+              If (tam1<>0) Then
+                Begin
+                  Try
+                    ChDir (arg1);
+                  Except
+                    on E: EInOutError Do Writeln (E.Message);
+                End;
             End;
+      If (tam1=0) Then ChDir('/home/'+GetEnvironmentVariable('USER'));
+
     End;
   'mv':
         Begin
@@ -128,6 +183,7 @@ Begin
   'touch':
            Begin
              If (tam1<>0) Then filecreate(arg1);
+             If (tam1=0) Then writeln('Digite o nome do arquivo para ser criado!');
            End;
   'locate':
             Begin
@@ -154,6 +210,7 @@ Begin
              Except
                on E: EInOutError Do writeln(E.Message);
            End;
+  If (tam1=0) Then writeln('Digite um diretório para excluir');
 End;
 'rm' :
        Begin
@@ -166,6 +223,8 @@ End;
          Except
            on E: EInOutError Do writeln(E.Message);
        End;
+If (tam1=0) Then writeln('Digite um arquivo para excluir');
+
 End;
 'mkdir':
          Begin
@@ -174,6 +233,8 @@ End;
            Except
              on E: EInOutError Do writeln(E.Message);
          End;
+If (tam1=0) Then writeln('Digite um diretório para criar');
+
 End;
 'clear' : clrscr();
 Else
