@@ -3,10 +3,7 @@ Um terminal simples feito em Pascal para a matéria de Linguagens de Programaç�
 
 Comandos:
 
-- ls, cd, mkdir, mv, rmdir, rm, clear, man, locate, cat
+- ls, cd, mkdir, mv, rmdir, rm, clear, man, locate, cat, touch
 
 Implemenatdos:
-- mkdir, rmdir, rm, clear, cat, man(20% feito)
-
-Ainda não implementadaos:
-- ls, cd, mv, locate
+- mkdir, rmdir, rm, clear, cat, touch, ls, cd, mv, man(20% feito)
