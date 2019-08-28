@@ -98,7 +98,6 @@ begin
       'cat':
       begin
         AssignFile(arq, arg1);
-                  {$I+}
         if (tam1 <> 0) then
           //Inicia a leitura do arquivo                    
           try
