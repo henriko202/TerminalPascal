@@ -13,18 +13,22 @@ uses
 
 //Criando tipos não primitivos
 type
-  TStringArray = array of string;
   TSysCharSet = set of AnsiChar;
 
 //Variáveis utilizadas 
 var
   entrada: string;
+  i: integer;
+  counter: integer;
   arg0: string;
   arg1: string;
-  arg2: string;
+  str0: string;
+  str1: string;
+  str2: string;
   tam1: integer;
   tam2: integer;
   charset: TSysCharSet;
+  cArgs: TSysCharSet;
   arq: TextFile;
   outputString: string;
   SR: TSearchRec;
@@ -33,26 +37,67 @@ var
 //Main do programa
 begin
   // teve que ser feito pois extractword não aceita char
+  if (argc=2) then ChDir(argv[1]);
   charset := [];
   include(charset, ' ');
-
+  cArgs := [];
+  include(cArgs, '-');
+  counter := 1;
   entrada := '';
 
   //Enquanto não for digitado 'exit'
   while (CompareText(entrada, 'exit') <> 0) do
   begin
+    arg0 :='';
+    arg1 :='';
     write(GetCurrentDir);
     write('>');
     readln(entrada);
 
-    arg0 := ExtractWord(1, entrada, charset);
-    arg1 := ExtractWord(2, entrada, charset);
-    arg2 := ExtractWord(3, entrada, charset);
-    tam1 := WordCount(arg1, charset);
-    tam2 := WordCount(arg2, charset);
+    for i := 0 to length(entrada) do
+    begin
+      if (entrada[i] = '-') then
+       begin
+         if (counter=1) then 
+         begin
+         arg0 := extractword(counter, entrada, cArgs);
+           counter:= counter+1;
+         end;
+         if (counter=2) then
+         begin
+          arg1 := extractword(counter, entrada, cArgs);
+           counter :=1;
+         end;
+       end;
+       if (entrada[i] <> '-') then 
+       begin
+         if (counter=1) then
+         begin
+          str0 := ExtractWord(counter, entrada, charset);
+           counter:= counter+1;
+         end;
+         if (counter=2) then
+         begin
+          str1 := ExtractWord(counter, entrada, charset);
+           counter:= counter+1;
+         end;
+         if (counter=3) then 
+         begin
+         str2 := ExtractWord(counter, entrada, charset);
+           counter := 1
+         end;
+       end; 
+    end;
+      //writeln('arg 1' + arg0);
+      //writeln('arg 2' + arg1);
+      //writeln('str 0' + str0);
+      //writeln('str 1' + str1);
+      //writeln('str 2' + str2);
+    tam1 := WordCount(str1, charset);
+    tam2 := WordCount(str2, charset);
 
     //Identificando o comando digitado pelo usuário
-    case arg0 of
+    case str0 of
       //help: lista os comandos existentes
       'help':
       begin
@@ -60,7 +105,7 @@ begin
         writeln('man, exit, cat, ls, cd, mv, touch, locate, rmdir, mkdir, rm, clear');
       end;
       //man: mostra o manual do comando fornecido
-      'man': case arg1 of
+      'man': case str1 of
           'man': writeln('Mostra um manual sobre o comando fornecido');
           'exit': writeln('Fecha o terminal');
           'cat': writeln('Mostra o conteúdo de um arquivo passado por argumento');
@@ -83,7 +128,7 @@ begin
             // if then else nao funciona (?????)
             //se comando não existe
             if (tam1 <> 0) then
-              writeln('Comando ' + arg1 + ' inexistente!');
+              writeln('Comando ' + str1 + ' inexistente!');
           end;
         end;
       //exit: sai do terminal 
@@ -97,7 +142,7 @@ begin
       //cat: Lê o conteúdo de um arquivo
       'cat':
       begin
-        AssignFile(arq, arg1);
+        AssignFile(arq, str1);
         if (tam1 <> 0) then
           //Inicia a leitura do arquivo                    
           try
@@ -122,7 +167,12 @@ begin
         if FindFirst('*', faAnyFile and faDirectory, SR) = 0 then
           repeat
             with SR do
-              write(SR.Name + ' ');
+              if((arg0='d') or (arg1='d')) then
+                begin
+                  If (Attr and faDirectory) = faDirectory then
+                  Write(SR.Name + ' ');
+                end;
+                if((arg1<>'d') or (arg1<>'d')) then write(SR.Name + ' ');
           until FindNext(SR) <> 0;
         writeln();
         FindClose(SR);
@@ -133,7 +183,7 @@ begin
         //muda para o diretório que foi fornecido pelo usuário
         if (tam1 <> 0) then
           try
-            ChDir(arg1);
+            ChDir(str1);
             //caso ocorra um erro
           except
             on E: EInOutError do
@@ -146,13 +196,13 @@ begin
       //mv: muda o nome do arquivo ou move o arquivo
       'mv': if (tam1 <> 0) then
           if (tam2 <> 0) then
-            if not (renamefile(arg1, arg2)) then
+            if not (renamefile(str1, str2)) then
               writeln('Erro ao mover arquivo!');
       //touch: cria um novo arquivo
       'touch':
       begin
         if (tam1 <> 0) then
-          filecreate(arg1);
+          filecreate(str1);
         //caso não seja fornecido um nome
         if (tam1 = 0) then
           writeln('Digite o nome do arquivo para ser criado!');
@@ -163,7 +213,7 @@ begin
         //procura o arquivo com o nome fornecido 
         if (tam1 <> 0) then
         begin
-          if FindFirst('*' + arg1 + '*', faAnyFile and faDirectory, SR) = 0 then
+          if FindFirst('*' + str1 + '*', faAnyFile and faDirectory, SR) = 0 then
             repeat
               with SR do
                 write(SR.Name + ' ');
@@ -181,7 +231,7 @@ begin
         //Tenta excluir o diretório
         try
           if (tam1 <> 0) then
-            rmdir(arg1);
+            rmdir(str1);
           //Caso ocorra algum erro
         except
           on E: EInOutError do
@@ -198,7 +248,7 @@ begin
         try
           if (tam1 <> 0) then
           begin
-            Assign(texto, arg1);
+            Assign(texto, str1);
             erase(texto);
           end;
           //Caso ocorra algum erro
@@ -216,7 +266,7 @@ begin
         //tenta criar o novo diretório
         try
           if (tam1 <> 0) then
-            mkdir(arg1);
+            mkdir(str1);
           //caso ocorra algum erro
         except
           on E: EInOutError do
