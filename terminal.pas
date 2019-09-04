@@ -34,8 +34,9 @@ var
   outputString: string;
   SR: TSearchRec;
   texto: Text;
+  option: string;
 
-procedure procura(const diretorio, arquivo: string; const verifica: boolean);
+procedure procura(const diretorio, arquivo: string);
 var
   SR: TSearchRec;
   caminho: string;
@@ -50,14 +51,11 @@ begin
       FindClose(SR);
     end;
 
-  if not verifica then
-    exit;
-
   if FindFirst(caminho + '*', faDirectory, SR) = 0 then
     try
       repeat
         if ((SR.Attr and faDirectory) <> 0) and (SR.Name <> '.') and (SR.Name <> '..') then
-          procura(caminho + SR.Name, arquivo, true);
+          procura(caminho + SR.Name, arquivo);
       until FindNext(SR) <> 0;
     finally
       FindClose(SR);
@@ -87,10 +85,69 @@ begin
   end;
 end;
 
+function promptDir(const diretorio, arquivo: string): integer;
+var
+  SR: TSearchRec;
+  caminho: string;
+  j: integer;
+  option: string;
+
+begin
+  j := 0;
+  caminho := IncludeTrailingBackslash(diretorio);
+  writeln(caminho + arquivo);
+  if FindFirst(caminho + arquivo, faDirectory, SR) = 0 then
+  begin
+    repeat
+      j := j + 1;
+    until FindNext(SR) <> 0;
+    FindClose(SR);
+  end;
+  if (j = 1) then
+  begin
+    writeln('Arquivo ou diretório já existente, deseja sobrescrever? [y/n]');
+    readln(option);
+    if (option = 'y') then
+      deletaDir(caminho + arquivo)
+    else
+      result := -1;
+  end;
+end;
+
+function promptFile(const diretorio, arquivo: string): integer;
+var
+  SR: TSearchRec;
+  caminho: string;
+  j: integer;
+  option: string;
+
+begin
+  j := 0;
+  caminho := IncludeTrailingBackslash(diretorio);
+  writeln(caminho + arquivo);
+  if FindFirst(caminho + arquivo, faAnyFile, SR) = 0 then
+  begin
+    repeat
+      j := j + 1;
+    until FindNext(SR) <> 0;
+    FindClose(SR);
+  end;
+  if (j = 1) then
+  begin
+    writeln('Arquivo ou diretório já existente, deseja sobrescrever? [y/n]');
+    readln(option);
+    if (option = 'y') then
+      DeleteFile(caminho + arquivo)
+    else
+      result := -1;
+  end;
+end;
+
 //Main do programa
 begin
   //Teve que ser feito pois extractword não aceita char
-  if (argc = 2) then ChDir(argv[1]);
+  if (argc = 2) then
+    ChDir(argv[1]);
   charset := [];
   include(charset, ' ');
   cArgs := [];
@@ -251,13 +308,16 @@ begin
       //move: muda o nome do arquivo ou move o arquivo
       'move': if (tam1 <> 0) then
           if (tam2 <> 0) then
-            if not (renamefile(str1, str2)) then
-              writeln('Erro ao mover arquivo!');
+            if (promptFile(GetCurrentDir, str2) <> -1) then
+            begin
+              renamefile(str1, str2)
+
+            end;
       //mkfile: cria um novo arquivo
       'mkfile':
       begin
         if (tam1 <> 0) then
-          filecreate(str1);
+          if (promptFile(GetCurrentDir, str1) <> -1) then filecreate(str1);
         //caso não seja fornecido um nome
         if (tam1 = 0) then
           writeln('Digite o nome do arquivo para ser criado!');
@@ -267,7 +327,7 @@ begin
       begin
         //procura o arquivo com o nome fornecido 
         if (tam1 <> 0) then
-          procura(GetCurrentDir, str1, true);
+          procura(GetCurrentDir, str1);
         //caso o nome do arquivo não for fornecido 
         if (tam1 = 0) then
           writeln('Digite o nome do arquivo!');
@@ -293,11 +353,7 @@ begin
       begin
         //Tenta excluir o arquivo 
         try
-          if (tam1 <> 0) then
-          begin
-            Assign(texto, str1);
-            erase(texto);
-          end;
+          if (tam1 <> 0) then DeleteFile(str1);
           //Caso ocorra algum erro
         except
           on E: EInOutError do
@@ -313,7 +369,9 @@ begin
         //tenta criar o novo diretório
         try
           if (tam1 <> 0) then
-            mkdir(str1);
+            if (promptDir(GetCurrentDir, str1) <> -1) then
+              mkdir(str1);
+
           //caso ocorra algum erro
         except
           on E: EInOutError do
