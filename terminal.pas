@@ -1,4 +1,5 @@
 //Projeto 1 FILE CONQUEROR _ Explorador de arquivos com Shell
+//Alunos: Henriko Alberton, Erica Saito
 
 program TTY;
 
@@ -34,10 +35,62 @@ var
   SR: TSearchRec;
   texto: Text;
 
+procedure procura(const diretorio, arquivo: string; const verifica: boolean);
+var
+  SR: TSearchRec;
+  caminho: string;
+begin
+  caminho := IncludeTrailingBackslash(diretorio);
+  if FindFirst(caminho + arquivo, faAnyFile - faDirectory, SR) = 0 then
+    try
+      repeat
+        writeln(caminho + SR.Name);
+      until FindNext(SR) <> 0;
+    finally
+      FindClose(SR);
+    end;
+
+  if not verifica then
+    exit;
+
+  if FindFirst(caminho + '*', faDirectory, SR) = 0 then
+    try
+      repeat
+        if ((SR.Attr and faDirectory) <> 0) and (SR.Name <> '.') and (SR.Name <> '..') then
+          procura(caminho + SR.Name, arquivo, true);
+      until FindNext(SR) <> 0;
+    finally
+      FindClose(SR);
+    end;
+end;
+
+procedure deletaDir(const Nome: string);
+var
+  SR: TSearchRec;
+begin
+  if FindFirst(Nome + '/*', faAnyFile, SR) = 0 then
+  begin
+    try
+      repeat
+        if (SR.Attr and faDirectory <> 0) then
+        begin
+          if (SR.Name <> '.') and (SR.Name <> '..') then
+            deletaDir(Nome + '/' + SR.Name);
+        end
+        else
+          DeleteFile(Nome + '/' + SR.Name);
+      until FindNext(SR) <> 0;
+    finally
+      FindClose(SR);
+    end;
+    RemoveDir(Nome);
+  end;
+end;
+
 //Main do programa
 begin
-  // teve que ser feito pois extractword não aceita char
-  if (argc=2) then ChDir(argv[1]);
+  //Teve que ser feito pois extractword não aceita char
+  if (argc = 2) then ChDir(argv[1]);
   charset := [];
   include(charset, ' ');
   cArgs := [];
@@ -48,8 +101,9 @@ begin
   //Enquanto não for digitado 'exit'
   while (CompareText(entrada, 'exit') <> 0) do
   begin
-    arg0 :='';
-    arg1 :='';
+    arg0 := '';
+    arg1 := '';
+    write('user@terminal:');
     write(GetCurrentDir);
     write('>');
     readln(entrada);
@@ -57,42 +111,38 @@ begin
     for i := 0 to length(entrada) do
     begin
       if (entrada[i] = '-') then
-       begin
-         if (counter=1) then 
-         begin
-         arg0 := extractword(counter, entrada, cArgs);
-           counter:= counter+1;
-         end;
-         if (counter=2) then
-         begin
+      begin
+        if (counter = 1) then
+        begin
+          arg0 := extractword(counter, entrada, cArgs);
+          counter := counter + 1;
+        end;
+        if (counter = 2) then
+        begin
           arg1 := extractword(counter, entrada, cArgs);
-           counter :=1;
-         end;
-       end;
-       if (entrada[i] <> '-') then 
-       begin
-         if (counter=1) then
-         begin
+          counter := 1;
+        end;
+      end;
+      if (entrada[i] <> '-') then
+      begin
+        if (counter = 1) then
+        begin
           str0 := ExtractWord(counter, entrada, charset);
-           counter:= counter+1;
-         end;
-         if (counter=2) then
-         begin
+          counter := counter + 1;
+        end;
+        if (counter = 2) then
+        begin
           str1 := ExtractWord(counter, entrada, charset);
-           counter:= counter+1;
-         end;
-         if (counter=3) then 
-         begin
-         str2 := ExtractWord(counter, entrada, charset);
-           counter := 1
-         end;
-       end; 
+          counter := counter + 1;
+        end;
+        if (counter = 3) then
+        begin
+          str2 := ExtractWord(counter, entrada, charset);
+          counter := 1;
+        end;
+      end;
     end;
-      //writeln('arg 1' + arg0);
-      //writeln('arg 2' + arg1);
-      //writeln('str 0' + str0);
-      //writeln('str 1' + str1);
-      //writeln('str 2' + str2);
+
     tam1 := WordCount(str1, charset);
     tam2 := WordCount(str2, charset);
 
@@ -102,7 +152,7 @@ begin
       'help':
       begin
         writeln('Comandos existentes:');
-        writeln('man, exit, cat, ls, cd, mv, touch, locate, rmdir, mkdir, rm, clear');
+        writeln('man, exit, cat, ls, cd, move, mkfile, locate, rmdir, mkdir, rmfile, clear, copy');
       end;
       //man: mostra o manual do comando fornecido
       'man': case str1 of
@@ -111,21 +161,22 @@ begin
           'cat': writeln('Mostra o conteúdo de um arquivo passado por argumento');
           'ls': writeln('Mostra o conteúdo da pasta atual');
           'cd': writeln('Muda o diretório atual');
-          'mv': writeln('Move ou renomeia um arquivo');
-          'touch': writeln('Cria um arquivo');
+          'move': writeln('Move arquivo ou diretório para destino');
+          'mkfile': writeln('Cria um arquivo');
           'locate': writeln('Procura um arquivo na pasta atual');
           'rmdir': writeln('Remove um diretório da pasta autal');
           'mkdir': writeln('Cria um diretório na pasta atual');
-          'rm': writeln('Remove um arquivo da pasta atual');
+          'rmfile': writeln('Remove um arquivo da pasta atual');
           'clear': writeln('Limpa a tela do terminal');
           'help': writeln('Mostra os comandos existentes');
+          'copy': writeln('Copia arquivo/diretório para destino');
             // caso padrão, comando vazio ou inexistente
           else
           begin
             //Se comando não for fornecido
             if (tam1 = 0) then
               writeln('Qual manual gostaria de ver?');
-            // if then else nao funciona (?????)
+            //if then else nao funciona (?????)
             //se comando não existe
             if (tam1 <> 0) then
               writeln('Comando ' + str1 + ' inexistente!');
@@ -135,6 +186,11 @@ begin
       'exit':
       begin
         writeln('Bye!');
+        exit;
+      end;
+      'exita':
+      begin
+        writeln('Exitando');
         exit;
       end;
       //caso não seja digitado nada 
@@ -167,12 +223,11 @@ begin
         if FindFirst('*', faAnyFile and faDirectory, SR) = 0 then
           repeat
             with SR do
-              if((arg0='d') or (arg1='d')) then
-                begin
-                  If (Attr and faDirectory) = faDirectory then
-                  Write(SR.Name + ' ');
-                end;
-                if((arg1<>'d') or (arg1<>'d')) then write(SR.Name + ' ');
+              if ((arg0 = 'd') or (arg1 = 'd')) then
+                if (Attr and faDirectory) = faDirectory then
+                  write(SR.Name + ' ');
+            if ((arg1 <> 'd') or (arg1 <> 'd')) then
+              write(SR.Name + ' ');
           until FindNext(SR) <> 0;
         writeln();
         FindClose(SR);
@@ -193,13 +248,13 @@ begin
         if (tam1 = 0) then
           ChDir('/home/' + GetEnvironmentVariable('USER'));
       end;
-      //mv: muda o nome do arquivo ou move o arquivo
-      'mv': if (tam1 <> 0) then
+      //move: muda o nome do arquivo ou move o arquivo
+      'move': if (tam1 <> 0) then
           if (tam2 <> 0) then
             if not (renamefile(str1, str2)) then
               writeln('Erro ao mover arquivo!');
-      //touch: cria um novo arquivo
-      'touch':
+      //mkfile: cria um novo arquivo
+      'mkfile':
       begin
         if (tam1 <> 0) then
           filecreate(str1);
@@ -212,15 +267,7 @@ begin
       begin
         //procura o arquivo com o nome fornecido 
         if (tam1 <> 0) then
-        begin
-          if FindFirst('*' + str1 + '*', faAnyFile and faDirectory, SR) = 0 then
-            repeat
-              with SR do
-                write(SR.Name + ' ');
-            until FindNext(SR) <> 0;
-          writeln();
-          FindClose(SR);
-        end;
+          procura(GetCurrentDir, str1, true);
         //caso o nome do arquivo não for fornecido 
         if (tam1 = 0) then
           writeln('Digite o nome do arquivo!');
@@ -231,7 +278,7 @@ begin
         //Tenta excluir o diretório
         try
           if (tam1 <> 0) then
-            rmdir(str1);
+            deletaDir(str1)
           //Caso ocorra algum erro
         except
           on E: EInOutError do
@@ -241,8 +288,8 @@ begin
         if (tam1 = 0) then
           writeln('Digite um diretório para excluir');
       end;
-      //rm: exclui o arquivo com o nome fornecido
-      'rm':
+      //rmfile: exclui o arquivo com o nome fornecido
+      'rmfile':
       begin
         //Tenta excluir o arquivo 
         try
