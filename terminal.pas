@@ -33,8 +33,22 @@ var
   arq: TextFile;
   outputString: string;
   SR: TSearchRec;
-  texto: Text;
-  option: string;
+
+function copy(Source, Target: string): boolean;
+var
+  Buffer: TMemoryStream;
+begin
+  result := false;
+  Buffer := TMemoryStream.Create;
+  try
+    Buffer.LoadFromFile(Source);
+    Buffer.SaveToFile(Target);
+    result := true
+  except
+    writeln('Erro ao copiar arquivo!');
+  end;
+  Buffer.Free;
+end;
 
 procedure procura(const diretorio, arquivo: string);
 var
@@ -45,7 +59,6 @@ begin
   if FindFirst(caminho + arquivo, faAnyFile - faDirectory, SR) = 0 then
     try
       repeat
-        writeln(caminho + SR.Name);
       until FindNext(SR) <> 0;
     finally
       FindClose(SR);
@@ -95,7 +108,6 @@ var
 begin
   j := 0;
   caminho := IncludeTrailingBackslash(diretorio);
-  writeln(caminho + arquivo);
   if FindFirst(caminho + arquivo, faDirectory, SR) = 0 then
   begin
     repeat
@@ -105,7 +117,8 @@ begin
   end;
   if (j = 1) then
   begin
-    writeln('Arquivo ou diretório já existente, deseja sobrescrever? [y/n]');
+    writeln();
+    write('Arquivo ou diretório já existente, deseja sobrescrever? [y/n] ');
     readln(option);
     if (option = 'y') then
       deletaDir(caminho + arquivo)
@@ -124,7 +137,6 @@ var
 begin
   j := 0;
   caminho := IncludeTrailingBackslash(diretorio);
-  writeln(caminho + arquivo);
   if FindFirst(caminho + arquivo, faAnyFile, SR) = 0 then
   begin
     repeat
@@ -134,7 +146,8 @@ begin
   end;
   if (j = 1) then
   begin
-    writeln('Arquivo ou diretório já existente, deseja sobrescrever? [y/n]');
+    writeln();
+    write('Arquivo ou diretório já existente, deseja sobrescrever? [y/n] ');
     readln(option);
     if (option = 'y') then
       DeleteFile(caminho + arquivo)
@@ -205,38 +218,99 @@ begin
 
     //Identificando o comando digitado pelo usuário
     case str0 of
-      //help: lista os comandos existentes
-      'help':
-      begin
-        writeln('Comandos existentes:');
-        writeln('man, exit, cat, ls, cd, move, mkfile, locate, rmdir, mkdir, rmfile, clear, copy');
-      end;
       //man: mostra o manual do comando fornecido
       'man': case str1 of
-          'man': writeln('Mostra um manual sobre o comando fornecido');
-          'exit': writeln('Fecha o terminal');
-          'cat': writeln('Mostra o conteúdo de um arquivo passado por argumento');
-          'ls': writeln('Mostra o conteúdo da pasta atual');
-          'cd': writeln('Muda o diretório atual');
-          'move': writeln('Move arquivo ou diretório para destino');
-          'mkfile': writeln('Cria um arquivo');
-          'locate': writeln('Procura um arquivo na pasta atual');
-          'rmdir': writeln('Remove um diretório da pasta autal');
-          'mkdir': writeln('Cria um diretório na pasta atual');
-          'rmfile': writeln('Remove um arquivo da pasta atual');
-          'clear': writeln('Limpa a tela do terminal');
-          'help': writeln('Mostra os comandos existentes');
-          'copy': writeln('Copia arquivo/diretório para destino');
-            // caso padrão, comando vazio ou inexistente
+          'man':
+          begin
+            writeln('Mostra um manual sobre o comando fornecido');
+            writeln('Sinopsys: man [opção]');
+          end;
+          'exit':
+          begin
+            writeln('Fecha o terminal');
+            writeln('Sinopsys: exit');
+          end;
+          'cat':
+          begin
+            writeln('Mostra o conteúdo de um arquivo passado por argumento');
+            writeln('Sinopsys: cat [arquivo]');
+          end;
+          'ls':
+          begin
+            writeln('Mostra o conteúdo da pasta atual');
+            writeln('Sinopsys: ls [argumento1] [argumento2]');
+            writeln('Ou pode ser passado o argumento -full (sozinho) que irá mostrar todas as informaçoes dos arquivos e pastas');
+            writeln('[argumento1] pode ser:');
+            writeln('-valid Não lista as entradas implícitas (. e ..)');
+            writeln('-hidden Mostra arquivos e pastas ocultas');
+            writeln('-dirs Mostra apenas os diretórios');
+            writeln('-files Mostra apenas os arquivos');
+            writeln('[argumento2] pode ser:');
+            writeln('-sortasc Mostra os arquivos em forma crescente');
+            writeln('-sortdesc Mostra os arquivos em forma decrescente');
+          end;
+          'cd':
+          begin
+            writeln('Muda o diretório atual');
+            writeln('Sinopsys: cd [string]');
+          end;
+          'move':
+          begin
+            writeln('Move arquivo ou diretório para destino');
+            writeln('Sinopsys: move [source] [target]');
+          end;
+          'mkfile':
+          begin
+            writeln('Cria um arquivo');
+            writeln('Sinopsys: mkfile [target]');
+          end;
+          'locate':
+          begin
+            writeln('Procura um arquivo na pasta atual');
+            writeln('Sinopsys: locate [string]');
+          end;
+          'rmdir':
+          begin
+            writeln('Remove um diretório da pasta autal');
+            writeln('Sinopsys: rmdir [target]');
+          end;
+          'mkdir':
+          begin
+            writeln('Cria um diretório na pasta atual');
+            writeln('Sinopsys: mkdir [target]');
+          end;
+          'rmfile':
+          begin
+            writeln('Remove um arquivo da pasta atual');
+            writeln('Sinopsys: rmfile [target]');
+          end;
+          'clear':
+          begin
+            writeln('Limpa a tela do terminal');
+            writeln('Sinopsys: clear');
+          end;
+          'help':
+          begin
+            writeln('Mostra os comandos existentes');
+            writeln('Sinopsys: help');
+          end;
+          'copy':
+          begin
+            writeln('Copia arquivo/diretório para destino');
+            writeln('Sinopsys: copy [source] [target]');
+          end;
+            // caso padrão, comando inexistente ou mostra os comandos disponíveis
           else
           begin
             //Se comando não for fornecido
             if (tam1 = 0) then
-              writeln('Qual manual gostaria de ver?');
-            //if then else nao funciona (?????)
+            begin
+              writeln('Comandos existentes:');
+              writeln('ls, cd, mkdir, mkfile, rmdir, rmfile, move, copy, clear, man, locate, cat, help');
+              writeln('ls possui certos argumentos, consulte "man ls" para vê-los');
+            end
             //se comando não existe
-            if (tam1 <> 0) then
-              writeln('Comando ' + str1 + ' inexistente!');
+            else writeln('Comando ' + str1 + ' inexistente!');
           end;
         end;
       //exit: sai do terminal 
@@ -247,7 +321,7 @@ begin
       end;
       'exita':
       begin
-        writeln('Exitando');
+        writeln('Exitando (sim, isso foi de propósito)');
         exit;
       end;
       //caso não seja digitado nada 
@@ -277,15 +351,32 @@ begin
       'ls':
         //Inicia a busca por um arquivo ou diretório
       begin
-        if FindFirst('*', faAnyFile and faDirectory, SR) = 0 then
+      writeln(arg0, arg1);
+        if FindFirst('*', faAnyFile, SR) = 0 then
+        begin          
           repeat
             with SR do
-              if ((arg0 = 'd') or (arg1 = 'd')) then
-                if (Attr and faDirectory) = faDirectory then
-                  write(SR.Name + ' ');
-            if ((arg1 <> 'd') or (arg1 <> 'd')) then
-              write(SR.Name + ' ');
+            begin
+            //arrumar
+              if ((arg0 = 'dirs') or (arg1 = 'dirs')) then
+                if (Attr and faDirectory) = faDirectory then write(SR.Name + ' ');
+              if ((arg0 = 'valid') or (arg1 = 'valid')) then
+                if((SR.Name<>'.') or (SR.Name<>'..')) then write(SR.Name + ' ');
+              if ((arg0 = 'hidden') or (arg1 = 'hidden')) then
+                if (Attr and faHidden) = faHidden then write(SR.Name + ' ');              
+              if ((arg0 = 'files') or (arg1 = 'files')) then              
+                if (Attr and faAnyFile) = faAnyFile then write(SR.Name + ' ');                            
+              if ((arg0 = 'full') or (arg1 = 'full')) then
+              begin
+               writeln();                
+               write(Name + ' ');
+               write(Size);
+               write('B');
+              end
+            else write(SR.Name + ' ');
+            end;
           until FindNext(SR) <> 0;
+        end;
         writeln();
         FindClose(SR);
       end;
@@ -309,15 +400,17 @@ begin
       'move': if (tam1 <> 0) then
           if (tam2 <> 0) then
             if (promptFile(GetCurrentDir, str2) <> -1) then
-            begin
-              renamefile(str1, str2)
-
-            end;
+              renamefile(str1, str2);
+      'copy': if (tam1 <> 0) then
+          if (tam2 <> 0) then
+            if (promptFile(GetCurrentDir, str2) <> -1) then
+              copy(str1, str2);
       //mkfile: cria um novo arquivo
       'mkfile':
       begin
         if (tam1 <> 0) then
-          if (promptFile(GetCurrentDir, str1) <> -1) then filecreate(str1);
+          if (promptFile(GetCurrentDir, str1) <> -1) then
+            filecreate(str1);
         //caso não seja fornecido um nome
         if (tam1 = 0) then
           writeln('Digite o nome do arquivo para ser criado!');
@@ -353,7 +446,8 @@ begin
       begin
         //Tenta excluir o arquivo 
         try
-          if (tam1 <> 0) then DeleteFile(str1);
+          if (tam1 <> 0) then
+            DeleteFile(str1);
           //Caso ocorra algum erro
         except
           on E: EInOutError do
