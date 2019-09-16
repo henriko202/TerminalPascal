@@ -3,10 +3,11 @@
 
 program TTY;
 
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 
 //Bibliotecas utilizadas
-uses
+uses {$IFDEF UNIX} {$IFDEF UseCThreads}
+  cthreads, {$ENDIF} {$ENDIF}
   crt,
   SysUtils,
   strutils,
@@ -300,18 +301,16 @@ begin
             writeln('Sinopsys: copy [source] [target]');
           end;
             // caso padrão, comando inexistente ou mostra os comandos disponíveis
-          else
-          begin
-            //Se comando não for fornecido
-            if (tam1 = 0) then
+          else if (tam1 = 0) then
             begin
               writeln('Comandos existentes:');
               writeln('ls, cd, mkdir, mkfile, rmdir, rmfile, move, copy, clear, man, locate, cat, help');
               writeln('ls possui certos argumentos, consulte "man ls" para vê-los');
             end
             //se comando não existe
-            else writeln('Comando ' + str1 + ' inexistente!');
-          end;
+            else
+              writeln('Comando ' + str1 + ' inexistente!');
+            //Se comando não for fornecido
         end;
       //exit: sai do terminal 
       'exit':
@@ -351,32 +350,37 @@ begin
       'ls':
         //Inicia a busca por um arquivo ou diretório
       begin
-      writeln(arg0, arg1);
-        if FindFirst('*', faAnyFile, SR) = 0 then
-        begin          
+        if FindFirst('*', faAnyFile and faDirectory, SR) = 0 then
           repeat
             with SR do
             begin
-            //arrumar
-              if ((arg0 = 'dirs') or (arg1 = 'dirs')) then
-                if (Attr and faDirectory) = faDirectory then write(SR.Name + ' ');
-              if ((arg0 = 'valid') or (arg1 = 'valid')) then
-                if((SR.Name<>'.') or (SR.Name<>'..')) then write(SR.Name + ' ');
-              if ((arg0 = 'hidden') or (arg1 = 'hidden')) then
-                if (Attr and faHidden) = faHidden then write(SR.Name + ' ');              
-              if ((arg0 = 'files') or (arg1 = 'files')) then              
-                if (Attr and faAnyFile) = faAnyFile then write(SR.Name + ' ');                            
-              if ((arg0 = 'full') or (arg1 = 'full')) then
+              //arrumar 
+              if (arg1 = 'dirs') then
+                if (Attr and faDirectory) = faDirectory then
+                begin
+                  write(Name + ' ');
+                  writeln();
+                end;
+              if (arg1 = 'valid') then
+                if ((Name <> '.') and (Name <> '..')) then
+                  write(Name + ' ');
+              if (arg1 = 'hidden') then
+                if (Attr and faHidden) = faHidden then
+                  write(Name + ' ');
+              if (arg1 = 'files') then
+                if (Attr and faAnyFile) = faAnyFile then
+                  write(Name + ' ');
+              if (arg1 = 'full') then
               begin
-               writeln();                
-               write(Name + ' ');
-               write(Size);
-               write('B');
-              end
-            else write(SR.Name + ' ');
+                writeln();
+                write(Name + '  ');
+                write(Size);
+                write('B');
+              end;
+              if (arg1 = '') then
+                write(Name + ' ');
             end;
           until FindNext(SR) <> 0;
-        end;
         writeln();
         FindClose(SR);
       end;
