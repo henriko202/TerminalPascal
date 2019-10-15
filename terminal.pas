@@ -2,12 +2,10 @@
 //Alunos: Henriko Alberton, Erica Saito
 
 program TTY;
-
 {$MODE OBJFPC}{$H+}
 
 //Bibliotecas utilizadas
-uses {$IFDEF UNIX} {$IFDEF UseCThreads}
-  cthreads, {$ENDIF} {$ENDIF}
+uses
   crt,
   SysUtils,
   strutils,
@@ -51,7 +49,7 @@ begin
   Buffer.Free;
 end;
 
-//Função criara para escrever na mesma linha, já que o sorted.text escrevia em varias linhas
+//Função criada para escrever na mesma linha, já que o sorted.text escrevia em varias linhas
 procedure escreve(sorted: TStringList);
 var
   i: integer;
@@ -104,6 +102,7 @@ begin
         end
         else
           DeleteFile(Nome + '/' + SR.Name);
+
       until FindNext(SR) <> 0;
     finally
       FindClose(SR);
@@ -176,7 +175,7 @@ end;
 begin
   if (argc = 2) then
     ChDir(argv[1]);
-  //Teve que ser feito pois extractword não aceita charcharset := [];
+  charset := [];
   include(charset, ' ');
   cArgs := [];
   include(cArgs, '-');
@@ -514,4 +513,3 @@ begin
     arg.Clear;
   end;
 end.
-
